@@ -1,0 +1,944 @@
+CREATE DATABASE novi_pocetak200;
+USE novi_pocetak200;
+
+CREATE TABLE cena_seanse (
+    cena_id int  NOT NULL,
+    cena int  NOT NULL,
+    datumPromene date  NOT NULL,
+    CONSTRAINT cena_seanse_pk PRIMARY KEY (cena_id)
+);
+
+CREATE INDEX idx_cena_datum
+ON cena_seanse (cena, datumPromene);
+
+ALTER TABLE cena_seanse
+ADD CONSTRAINT unique_cena_datum
+UNIQUE (cena, datumPromene);
+
+-- Table: centar_za_obuku
+CREATE TABLE centar_za_obuku (
+    centar_id int  NOT NULL,
+    nazivCentra nvarchar(50)  NOT NULL,
+    mejl nvarchar(50)  NOT NULL,
+    brojTelefona varchar(20)  NOT NULL,
+    postanskaAdresa nvarchar(100)  NOT NULL,
+    CONSTRAINT centar_za_obuku_pk PRIMARY KEY (centar_id)
+);
+
+ALTER TABLE centar_za_obuku
+ADD CONSTRAINT unique_naziv_adresa
+UNIQUE (nazivCentra, postanskaAdresa);
+
+CREATE INDEX idx_naziv_mejl
+ON centar_za_obuku (nazivCentra, mejl);
+
+-- Table: drziSeansu
+CREATE TABLE drziSeansu (
+    drzi_id int  NOT NULL,
+    psihoterapeut_psihoterapeut_id int,
+    kandidat_kandidat_id int,
+    kandidat_centar_za_obuku_centar_id int,
+    CONSTRAINT drziSeansu_pk PRIMARY KEY (drzi_id)
+);
+
+
+-- Table: fakultet
+CREATE TABLE fakultet (
+    fakultet_id int  NOT NULL,
+    nazivFakulteta nvarchar(50)  NOT NULL,
+    univerzitet_univerzitet_id int  NOT NULL,
+    CONSTRAINT fakultet_pk PRIMARY KEY (fakultet_id,univerzitet_univerzitet_id)
+);
+
+ALTER TABLE fakultet
+ADD CONSTRAINT unique_naziv_univerzitet
+UNIQUE (nazivFakulteta, univerzitet_univerzitet_id);
+
+CREATE INDEX idx_naziv_fakulteta
+ON fakultet (nazivFakulteta);
+
+-- Table: kandidat
+CREATE TABLE kandidat (
+    kandidat_id int  NOT NULL,
+    ime nvarchar(50)  NOT NULL,
+    prezime nvarchar(50)  NOT NULL,
+    jmbg char(13)  NOT NULL,
+    datumRodjenja date  NOT NULL,
+    prebivaliste nvarchar(50)  NOT NULL,
+    brojTelefona varchar(20)  NOT NULL,
+    mejl nvarchar(50)  NOT NULL,
+    fakultet_fakultet_id int  NOT NULL,
+    fakultet_univerzitet_univerzitet_id int  NOT NULL,
+    stepen_studija_stepen_id int  NOT NULL,
+    centar_za_obuku_centar_id int  NOT NULL,
+    CONSTRAINT kandidat_pk PRIMARY KEY (kandidat_id,centar_za_obuku_centar_id)
+);
+
+ALTER TABLE kandidat
+ADD CONSTRAINT unique_jmbg
+UNIQUE (jmbg);
+
+CREATE INDEX idx_ime_prezime_mejl
+ON kandidat (ime, prezime, mejl);
+
+
+-- Table: klijent
+CREATE TABLE klijent (
+    klijent_id int  NOT NULL,
+    ime nvarchar(50)  NOT NULL,
+    prezime nvarchar(50)  NOT NULL,
+    datumRodjenja date  NOT NULL,
+    pol nvarchar(50)  NOT NULL,
+    mejl nvarchar(50)  NOT NULL,
+    brojTelefona varchar(20)  NOT NULL,
+    isaoRanije boolean  NOT NULL,
+    opisProblema nvarchar(500)  NOT NULL,
+    CONSTRAINT klijent_pk PRIMARY KEY (klijent_id)
+);
+
+ALTER TABLE klijent
+ADD CONSTRAINT unique_ime_prezime_mejl
+UNIQUE (ime, prezime, mejl);
+
+CREATE INDEX idx_ime_prezime_mejl
+ON klijent (ime, prezime, mejl);
+
+-- Table: oblast
+CREATE TABLE oblast (
+    oblast_id int  NOT NULL,
+    nazivOblasti nvarchar(50)  NOT NULL,
+    CONSTRAINT oblast_pk PRIMARY KEY (oblast_id)
+);
+
+ALTER TABLE oblast
+ADD CONSTRAINT unique_naziv_oblasti
+UNIQUE (nazivOblasti);
+
+CREATE INDEX idx_naziv_oblasti
+ON oblast (nazivOblasti);
+
+
+
+-- Table: oblast_fakultet
+CREATE TABLE oblast_fakultet (
+    oblast_oblast_id int  NOT NULL,
+    fakultet_fakultet_id int  NOT NULL,
+    fakultet_univerzitet_univerzitet_id int  NOT NULL,
+    CONSTRAINT oblast_fakultet_pk PRIMARY KEY (oblast_oblast_id,fakultet_fakultet_id,fakultet_univerzitet_univerzitet_id)
+);
+
+-- Table: oblast_psihoterapije
+CREATE TABLE oblast_psihoterapije (
+    oblast_id int  NOT NULL,
+    naziv nvarchar(50)  NOT NULL,
+    CONSTRAINT oblast_psihoterapije_pk PRIMARY KEY (oblast_id)
+);
+
+ALTER TABLE oblast_psihoterapije
+ADD CONSTRAINT unique_naziv_oblast_psihoterapija
+UNIQUE (naziv);
+
+CREATE INDEX idx_naziv_oblast_psihoterapije
+ON oblast_psihoterapije (naziv);
+
+
+-- Table: oblast_uze_usmerenje
+CREATE TABLE oblast_uze_usmerenje (
+    oblast_oblast_id int  NOT NULL,
+    uze_usmerenje_usmerenje_id int  NOT NULL,
+    CONSTRAINT oblast_uze_usmerenje_pk PRIMARY KEY (oblast_oblast_id,uze_usmerenje_usmerenje_id)
+);
+
+
+
+-- Table: placanje
+CREATE TABLE placanje (
+    placanje_id int  NOT NULL,
+    nacinPlacanja nvarchar(10)  NOT NULL,
+    rata int  NULL,
+    uplaceno int  NOT NULL,
+    valuta_valuta_id int  NOT NULL,
+    seansa_seansa_id int  NOT NULL,
+    seansa_klijent_klijent_id int  NOT NULL,
+    seansa_drziSeansu_drzi_id int  NOT NULL,
+    CONSTRAINT placanje_pk PRIMARY KEY (seansa_drziSeansu_drzi_id,seansa_klijent_klijent_id,seansa_seansa_id)
+);
+
+ALTER TABLE placanje
+ADD CONSTRAINT unique_placanje_kombo
+UNIQUE (nacinPlacanja, seansa_klijent_klijent_id, uplaceno, valuta_valuta_id, seansa_seansa_id);
+
+CREATE INDEX idx_placanje_kombo
+ON placanje (nacinPlacanja, seansa_klijent_klijent_id, uplaceno, valuta_valuta_id, seansa_seansa_id);
+
+ALTER TABLE placanje DROP PRIMARY KEY;
+
+ALTER TABLE placanje
+ADD CONSTRAINT placanje_pk
+PRIMARY KEY (placanje_id, seansa_drziSeansu_drzi_id, seansa_klijent_klijent_id, seansa_seansa_id);
+
+-- Table: psiholoski_test
+CREATE TABLE psiholoski_test (
+    psiholoski_test_id int  NOT NULL,
+    oblast nvarchar(50)  NOT NULL,
+    naziv varchar(50)  NOT NULL,
+    cena int  NOT NULL,
+    rezultat int  NULL,
+    seansa_seansa_id int  NOT NULL,
+    seansa_klijent_klijent_id int  NOT NULL,
+    seansa_drziSeansu_drzi_id int  NOT NULL,
+    CONSTRAINT psiholoski_test_pk PRIMARY KEY (psiholoski_test_id,seansa_drziSeansu_drzi_id,seansa_klijent_klijent_id,seansa_seansa_id)
+);
+
+
+ALTER TABLE psiholoski_test
+ADD CONSTRAINT unique_naziv_cena_rezultat_seansa
+UNIQUE (naziv, cena, rezultat, seansa_seansa_id);
+
+CREATE INDEX idx_naziv_cena_rezultat_seansa
+ON psiholoski_test (naziv, cena, rezultat, seansa_seansa_id);
+
+
+
+-- Table: psihoterapeut
+CREATE TABLE psihoterapeut (
+    psihoterapeut_id int  NOT NULL,
+    ime nvarchar(50)  NOT NULL,
+    prezime nvarchar(50)  NOT NULL,
+    jmbg char(13)  NOT NULL,
+    datumRodjenja date  NOT NULL,
+    prebivaliste nvarchar(50)  NOT NULL,
+    brojTelefona varchar(20)  NOT NULL,
+    mejl nvarchar(50)  NOT NULL,
+    datumSertifikacije date  NOT NULL,
+    lozinka varchar(50) NOT NULL,
+    oblast_psihoterapije_oblast_id int  NOT NULL,
+    centar_za_obuku_centar_id int  NOT NULL,
+    CONSTRAINT psihoterapeut_pk PRIMARY KEY (psihoterapeut_id)
+);
+
+ALTER TABLE psihoterapeut
+ADD CONSTRAINT unique_jmbg
+UNIQUE (jmbg);
+
+CREATE INDEX idx_ime_prezime_mejl
+ON psihoterapeut (ime, prezime, mejl);
+
+
+
+-- Table: seansa
+
+CREATE TABLE seansa (
+    seansa_id INT NOT NULL,
+    dan DATE NOT NULL,
+    vreme TIME NOT NULL,
+    trajanje TIME NOT NULL,
+    klijent_klijent_id INT NOT NULL,
+    cena_seanse_cena_id INT NOT NULL,
+    drziSeansu_drzi_id INT NOT NULL,
+
+    opis_seanse VARCHAR(255),
+    objavljivanje_podataka BOOLEAN,
+    razlog_objavljivanja VARCHAR(255),
+    kome_su_objavljeni VARCHAR(255),
+    vreme_objavljivanja DATE,
+
+    CONSTRAINT seansa_pk PRIMARY KEY (seansa_id, drziSeansu_drzi_id, klijent_klijent_id)
+);
+
+
+ALTER TABLE seansa
+ADD CONSTRAINT unique_seansa_dan_vreme_trajanje_klijent_drzi
+UNIQUE (dan, vreme, trajanje, klijent_klijent_id, drziSeansu_drzi_id);
+
+CREATE INDEX idx_seansa_dan_vreme_trajanje_klijent_drzi
+ON seansa (dan, vreme, trajanje, klijent_klijent_id, drziSeansu_drzi_id);
+
+
+
+-- Table: sertifikacija
+CREATE TABLE sertifikacija (
+    datumOd date  NOT NULL,
+    datumDo date  NOT NULL,
+    psihoterapeut_psihoterapeut_id int  NOT NULL,
+    kandidat_kandidat_id int  NOT NULL,
+    kandidat_centar_za_obuku_centar_id int  NOT NULL,
+    CONSTRAINT sertifikacija_pk PRIMARY KEY (psihoterapeut_psihoterapeut_id,kandidat_centar_za_obuku_centar_id,kandidat_kandidat_id)
+);
+
+ALTER TABLE sertifikacija
+ADD CONSTRAINT unique_sertifikacija
+UNIQUE (datumOd, datumDo, psihoterapeut_psihoterapeut_id);
+
+CREATE INDEX idx_sertifikacija_datum_psihoterapeut_kandidat
+ON sertifikacija (datumOd, datumDo, psihoterapeut_psihoterapeut_id, kandidat_kandidat_id);
+
+
+-- Table: stepen_studija
+CREATE TABLE stepen_studija (
+    stepen_id int  NOT NULL,
+    naziv int  NOT NULL,
+    CONSTRAINT stepen_studija_pk PRIMARY KEY (stepen_id)
+);
+
+ALTER TABLE stepen_studija
+ADD CONSTRAINT unique_naziv_stepen
+UNIQUE (naziv);
+
+CREATE INDEX idx_naziv_stepen
+ON stepen_studija (naziv);
+
+-- Table: univerzitet
+CREATE TABLE univerzitet (
+    univerzitet_id int  NOT NULL,
+    nazivUniverziteta nvarchar(50)  NOT NULL,
+    uze_usmerenje_usmerenje_id int,
+    CONSTRAINT univerzitet_pk PRIMARY KEY (univerzitet_id)
+);
+
+ALTER TABLE univerzitet
+ADD CONSTRAINT unique_naziv_univerziteta
+UNIQUE (nazivUniverziteta);
+
+CREATE INDEX idx_naziv_univerziteta
+ON univerzitet (nazivUniverziteta);
+
+-- Table: uze_usmerenje
+CREATE TABLE uze_usmerenje (
+    usmerenje_id int  NOT NULL,
+    nazivUsmerenja nvarchar(50)  NOT NULL,
+    CONSTRAINT uze_usmerenje_pk PRIMARY KEY (usmerenje_id)
+);
+
+ALTER TABLE uze_usmerenje
+ADD CONSTRAINT unique_naziv_usmerenja
+UNIQUE (nazivUsmerenja);
+
+CREATE INDEX idx_naziv_usmerenja
+ON uze_usmerenje (nazivUsmerenja);
+
+-- Table: valuta
+CREATE TABLE valuta (
+    valuta_id int  NOT NULL,
+    skraceniNaziv nvarchar(3)  NOT NULL,
+    puniNaziv nvarchar(50)  NOT NULL,
+    CONSTRAINT valuta_pk PRIMARY KEY (valuta_id)
+);
+
+ALTER TABLE valuta
+ADD CONSTRAINT unique_skraceni_naziv
+UNIQUE (skraceniNaziv);
+
+CREATE INDEX idx_skraceni_puni_naziv
+ON valuta (skraceniNaziv, puniNaziv);
+
+-- foreign keys
+-- Reference: Kandidat_fakultet (table: kandidat)
+ALTER TABLE kandidat ADD CONSTRAINT Kandidat_fakultet FOREIGN KEY Kandidat_fakultet (fakultet_fakultet_id,fakultet_univerzitet_univerzitet_id)
+    REFERENCES fakultet (fakultet_id,univerzitet_univerzitet_id);
+
+-- Reference: Kandidat_stepen_studija (table: kandidat)
+ALTER TABLE kandidat ADD CONSTRAINT Kandidat_stepen_studija FOREIGN KEY Kandidat_stepen_studija (stepen_studija_stepen_id)
+    REFERENCES stepen_studija (stepen_id);
+
+-- Reference: drziSeansu_kandidat (table: drziSeansu)
+ALTER TABLE drziSeansu ADD CONSTRAINT drziSeansu_kandidat FOREIGN KEY drziSeansu_kandidat (kandidat_kandidat_id,kandidat_centar_za_obuku_centar_id)
+    REFERENCES kandidat (kandidat_id,centar_za_obuku_centar_id);
+
+-- Reference: drziSeansu_psihoterapeut (table: drziSeansu)
+ALTER TABLE drziSeansu ADD CONSTRAINT drziSeansu_psihoterapeut FOREIGN KEY drziSeansu_psihoterapeut (psihoterapeut_psihoterapeut_id)
+    REFERENCES psihoterapeut (psihoterapeut_id);
+
+-- Reference: fakultet_univerzitet (table: fakultet)
+ALTER TABLE fakultet ADD CONSTRAINT fakultet_univerzitet FOREIGN KEY fakultet_univerzitet (univerzitet_univerzitet_id)
+    REFERENCES univerzitet (univerzitet_id);
+
+-- Reference: kandidat_centar_za_obuku (table: kandidat)
+ALTER TABLE kandidat ADD CONSTRAINT kandidat_centar_za_obuku FOREIGN KEY kandidat_centar_za_obuku (centar_za_obuku_centar_id)
+    REFERENCES centar_za_obuku (centar_id);
+
+-- Reference: oblast_fakultet_fakultet (table: oblast_fakultet)
+ALTER TABLE oblast_fakultet ADD CONSTRAINT oblast_fakultet_fakultet FOREIGN KEY oblast_fakultet_fakultet (fakultet_fakultet_id,fakultet_univerzitet_univerzitet_id)
+    REFERENCES fakultet (fakultet_id,univerzitet_univerzitet_id);
+
+-- Reference: oblast_fakultet_oblast (table: oblast_fakultet)
+ALTER TABLE oblast_fakultet ADD CONSTRAINT oblast_fakultet_oblast FOREIGN KEY oblast_fakultet_oblast (oblast_oblast_id)
+    REFERENCES oblast (oblast_id);
+
+-- Reference: oblast_uze_usmerenje_oblast (table: oblast_uze_usmerenje)
+ALTER TABLE oblast_uze_usmerenje ADD CONSTRAINT oblast_uze_usmerenje_oblast FOREIGN KEY oblast_uze_usmerenje_oblast (oblast_oblast_id)
+    REFERENCES oblast (oblast_id);
+
+-- Reference: oblast_uze_usmerenje_uze_usmerenje (table: oblast_uze_usmerenje)
+ALTER TABLE oblast_uze_usmerenje ADD CONSTRAINT oblast_uze_usmerenje_uze_usmerenje FOREIGN KEY oblast_uze_usmerenje_uze_usmerenje (uze_usmerenje_usmerenje_id)
+    REFERENCES uze_usmerenje (usmerenje_id);
+
+-- Reference: placanje_seansa (table: placanje)
+ALTER TABLE placanje ADD CONSTRAINT placanje_seansa FOREIGN KEY placanje_seansa (seansa_seansa_id,seansa_drziSeansu_drzi_id,seansa_klijent_klijent_id)
+    REFERENCES seansa (seansa_id,drziSeansu_drzi_id,klijent_klijent_id);
+
+-- Reference: placanje_valuta (table: placanje)
+ALTER TABLE placanje ADD CONSTRAINT placanje_valuta FOREIGN KEY placanje_valuta (valuta_valuta_id)
+    REFERENCES valuta (valuta_id);
+
+-- Reference: psiholoski_test_seansa (table: psiholoski_test)
+ALTER TABLE psiholoski_test ADD CONSTRAINT psiholoski_test_seansa FOREIGN KEY psiholoski_test_seansa (seansa_seansa_id,seansa_drziSeansu_drzi_id,seansa_klijent_klijent_id)
+    REFERENCES seansa (seansa_id,drziSeansu_drzi_id,klijent_klijent_id);
+
+-- Reference: psihoterapeut_centar_za_obuku (table: psihoterapeut)
+ALTER TABLE psihoterapeut ADD CONSTRAINT psihoterapeut_centar_za_obuku FOREIGN KEY psihoterapeut_centar_za_obuku (centar_za_obuku_centar_id)
+    REFERENCES centar_za_obuku (centar_id);
+
+-- Reference: psihoterapeut_oblast_psihoterapije (table: psihoterapeut)
+ALTER TABLE psihoterapeut ADD CONSTRAINT psihoterapeut_oblast_psihoterapije FOREIGN KEY psihoterapeut_oblast_psihoterapije (oblast_psihoterapije_oblast_id)
+    REFERENCES oblast_psihoterapije (oblast_id);
+
+-- Reference: seansa_cena_seanse (table: seansa)
+ALTER TABLE seansa ADD CONSTRAINT seansa_cena_seanse FOREIGN KEY seansa_cena_seanse (cena_seanse_cena_id)
+    REFERENCES cena_seanse (cena_id);
+
+-- Reference: seansa_drziSeansu (table: seansa)
+ALTER TABLE seansa ADD CONSTRAINT seansa_drziSeansu FOREIGN KEY seansa_drziSeansu (drziSeansu_drzi_id)
+    REFERENCES drziSeansu (drzi_id);
+
+-- Reference: seansa_klijent (table: seansa)
+ALTER TABLE seansa ADD CONSTRAINT seansa_klijent FOREIGN KEY seansa_klijent (klijent_klijent_id)
+    REFERENCES klijent (klijent_id);
+
+-- Reference: sertifikacija_kandidat (table: sertifikacija)
+ALTER TABLE sertifikacija ADD CONSTRAINT sertifikacija_kandidat FOREIGN KEY sertifikacija_kandidat (kandidat_kandidat_id,kandidat_centar_za_obuku_centar_id)
+    REFERENCES kandidat (kandidat_id,centar_za_obuku_centar_id);
+
+-- Reference: sertifikacija_psihoterapeut (table: sertifikacija)
+ALTER TABLE sertifikacija ADD CONSTRAINT sertifikacija_psihoterapeut FOREIGN KEY sertifikacija_psihoterapeut (psihoterapeut_psihoterapeut_id)
+    REFERENCES psihoterapeut (psihoterapeut_id);
+
+-- Reference: univerzitet_uze_usmerenje (table: univerzitet)
+ALTER TABLE univerzitet ADD CONSTRAINT univerzitet_uze_usmerenje FOREIGN KEY univerzitet_uze_usmerenje (uze_usmerenje_usmerenje_id)
+    REFERENCES uze_usmerenje (usmerenje_id);
+
+INSERT INTO klijent (klijent_id, ime, prezime, datumRodjenja, pol, mejl, brojTelefona, isaoRanije, opisProblema) VALUES
+(1, 'Jovana', 'Jovanović', '1987-03-15', 'Žensko', 'jovana.jovanovic@email.com', '0642536731', TRUE, 'Anksioznost, problemi sa samopouzdanjem.'),
+(2, 'Marko', 'Marković', '1990-07-25', 'Muško', 'marko.markovic@email.com', '0642536732', FALSE, 'Depresija i problemi u vezama.'),
+(3, 'Ivana', 'Ivanović', '1995-05-10', 'Žensko', 'ivana.ivanovic@email.com', '0642536733', TRUE, 'Problemi sa stresom i radnim opterećenjem.'),
+(4, 'Nikola', 'Nikolić', '1989-10-20', 'Muško', 'nikola.nikolic@email.com', '0642536734', FALSE, 'Panični napadi i strah od javnih nastupa.'),
+(5, 'Ana', 'Anić', '1993-11-30', 'Žensko', 'ana.anic@email.com', '0642536735', TRUE, 'Problemi u porodici, nesigurnost.'),
+(6, 'Stefan', 'Stefanović', '1992-04-10', 'Muško', 'stefan.stefanovic@email.com', '0642536736', FALSE, 'Prošlost sa zlostavljanjem i niska emocionalna stabilnost.'),
+(7, 'Tanja', 'Tadić', '1994-12-05', 'Žensko', 'tanja.tadic@email.com','0642536737', TRUE, 'Trauma nakon nesreće, problemi sa spavanjem.'),
+(8, 'Vladimir', 'Vasiljević', '1986-09-17', 'Muško', 'vladimir.vasiljevic@email.com', '0642536738', FALSE, 'Lična kriza i nesigurnost u životnim odlukama.'),
+(9, 'Jelena', 'Jelić', '1991-03-25', 'Žensko', 'jelena.jelic@email.com', '0642536739', TRUE, 'Problemi sa samopouzdanjem i strahom od neuspeha.'),
+(10, 'Maja', 'Majić', '1988-01-14', 'Žensko', 'maja.majic@email.com', '0642536740', FALSE, 'Stres i problemi sa ljubavnim odnosima.');
+
+INSERT INTO oblast (oblast_id, nazivOblasti) VALUES
+(1, 'Psihodinamska psihoterapija'),
+(2, 'Kognitivno-bihevioralna terapija'),
+(3, 'Porodična terapija'),
+(4, 'Geštalt terapija'),
+(5, 'Transakciona analiza'),
+(6, 'Humanistička psihoterapija'),
+(7, 'Integrativna psihoterapija'),
+(8, 'Psihodrama'),
+(9, 'Dečija i adolescentna psihoterapija'),
+(10, 'Mindfulness i terapija usmerena na saosećanje');
+
+INSERT INTO oblast_psihoterapije (oblast_id, naziv) VALUES
+(1, 'Psihodinamska psihoterapija'),
+(2, 'Kognitivno-bihevioralna terapija'),
+(3, 'Porodična terapija'),
+(4, 'Geštalt terapija'),
+(5, 'Transakciona analiza'),
+(6, 'Humanistička psihoterapija'),
+(7, 'Integrativna psihoterapija'),
+(8, 'Psihodrama'),
+(9, 'Dečija i adolescentna psihoterapija'),
+(10, 'Mindfulness terapija');
+
+INSERT INTO valuta (valuta_id, skraceniNaziv, puniNaziv) VALUES
+(1, 'RSD', 'Srpski dinar'),
+(2, 'EUR', 'Evro'),
+(3, 'USD', 'Američki dolar'),
+(4, 'CHF', 'Švajcarski franak'),
+(5, 'GBP', 'Britanska funta'),
+(6, 'AUD', 'Australijski dolar'),
+(7, 'CAD', 'Kanadski dolar'),
+(8, 'JPY', 'Japanski jen'),
+(9, 'SEK', 'Švedska kruna'),
+(10, 'NOK', 'Norveška kruna');
+
+
+INSERT INTO uze_usmerenje (usmerenje_id, nazivUsmerenja) VALUES
+(1, 'Psihoterapija'),
+(2, 'Kognitivno-bihevioralna terapija'),
+(3, 'Psihodinamska psihoterapija'),
+(4, 'Humanistička psihoterapija'),
+(5, 'Porodična terapija'),
+(6, 'Integrativna psihoterapija'),
+(7, 'Geštalt terapija'),
+(8, 'Transakcionalna analiza'),
+(9, 'REBT'),
+(10, 'Sistemska terapija');
+INSERT INTO univerzitet (univerzitet_id, nazivUniverziteta,uze_usmerenje_usmerenje_id) VALUES
+(1, 'Univerzitet u Beogradu', 1),
+(2, 'Univerzitet Singidunum', 1),
+(3, 'Univerzitet u Novom Sadu', 2),
+(4, 'Univerzitet u Nišu', 4),
+(5, 'Univerzitet u Kragujevcu', 3),
+(6, 'Univerzitet Educons', 5),
+(7, 'Univerzitet u Prištini', 7),
+(8, 'Alfa BK Univerzitet', 8),
+(9, 'Univerzitet Metropolitan', 9),
+(10, 'Internacionalni univerzitet u Novom Pazaru', 10);
+INSERT INTO cena_seanse (cena_id, cena, datumPromene) VALUES
+(1, 3500, '2023-01-01'),
+(2, 3700, '2023-02-15'),
+(3, 4000, '2023-03-20'),
+(4, 4200, '2023-05-10'),
+(5, 4500, '2023-06-25'),
+(6, 4800, '2023-08-05'),
+(7, 5000, '2023-09-12'),
+(8, 5300, '2023-10-01'),
+(9, 5500, '2023-11-11'),
+(10, 6000, '2023-12-20');
+
+INSERT INTO centar_za_obuku (centar_id, nazivCentra, mejl, brojTelefona, postanskaAdresa) VALUES
+(1, 'Centar Fokus', 'kontakt@fokus.rs', 1122334, 'Bulevar Kralja Aleksandra 73, Beograd'),
+(2, 'Nova Vizija', 'info@vizija.rs', 1199887, 'Nemanjina 4, Novi Sad'),
+(3, 'Psihobalans', 'psihobalans@obuka.rs', 1133557, 'Cara Dušana 13, Niš'),
+(4, 'Centar Integracija', 'kontakt@integracija.rs', 1155779, 'Obilićev venac 9, Kragujevac'),
+(5, 'Edukativni Centar Mir', 'mir@edukacija.rs', 1144668, 'Zmaj Jovina 33, Subotica'),
+(6, 'Centar Horizonti', 'info@horizonti.rs', 1177554, 'Knez Mihailova 15, Beograd'),
+(7, 'Psihološki razvoj', 'kontakt@razvoj.rs', 1188996, 'Učiteljska 8, Zrenjanin'),
+(8, 'Svetlost', 'svetlost@obuka.rs', 1122114, 'Dunavska 21, Pančevo'),
+(9, 'Napredak', 'napredak@edu.rs', 1111777, 'Laze Telečkog 14, Novi Sad'),
+(10, 'Balans Edu', 'info@balans.edu.rs', 1166443, 'Maksima Gorkog 88, Beograd');
+
+
+INSERT INTO fakultet (fakultet_id, nazivFakulteta, univerzitet_univerzitet_id) VALUES
+(1, 'Filozofski fakultet', 1),
+(2, 'Fakultet za medije i komunikacije', 2),
+(3, 'Fakultet političkih nauka', 1),
+(4, 'Psihološki fakultet', 3),
+(5, 'Fakultet humanističkih nauka', 4),
+(6, 'Fakultet primenjene psihologije', 5),
+(7, 'Fakultet društvenih nauka', 6),
+(8, 'Pedagoški fakultet', 7),
+(9, 'Fakultet psihoterapije', 8),
+(10, 'Fakultet za obrazovanje', 9);
+
+
+INSERT INTO oblast_fakultet (oblast_oblast_id, fakultet_fakultet_id, fakultet_univerzitet_univerzitet_id) VALUES
+(1, 1, 1),
+(2, 2, 2),
+(3, 3, 1),
+(4, 4, 3),
+(5, 5, 4),
+(6, 6, 5),
+(7, 7, 6),
+(8, 8, 7),
+(9, 9, 8),
+(10, 10, 9);
+
+INSERT INTO stepen_studija (stepen_id, naziv) VALUES
+(1, 1),
+(2, 2),
+(3, 3);
+
+INSERT INTO kandidat (kandidat_id, ime, prezime, jmbg, datumRodjenja, prebivaliste, brojTelefona, mejl, fakultet_fakultet_id, fakultet_univerzitet_univerzitet_id, stepen_studija_stepen_id,
+ centar_za_obuku_centar_id) VALUES
+(1, 'Jovan', 'Jovanović', '1234567890123', '1990-01-15', 'Beograd', '0642536723', 'jovan.jovanovic@email.com', 4, 3, 2, 1),
+(2, 'Ana', 'Anić', '2345678901234', '1989-03-22', 'Novi Sad', '0642536724', 'ana.anic@email.com', 6, 5, 1, 2),
+(3, 'Marko', 'Marković', '3456789012345', '1992-07-30', 'Niš', '0642536725', 'marko.markovic@email.com', 9, 8, 3, 3),
+(4, 'Ivana', 'Ivanović', '4567890123456', '1991-11-05', 'Kragujevac', '0642536726', 'ivana.ivanovic@email.com', 3, 1, 2, 4),
+(5, 'Nikola', 'Nikolić', '5678901234567', '1990-05-10', 'Subotica', '0642536727', 'nikola.nikolic@email.com', 1, 1, 1, 5),
+(6, 'Maja', 'Majić', '6789012345678', '1993-02-18', 'Zrenjanin', '0642536728', 'maja.majic@email.com', 2, 2, 3, 6),
+(7, 'Stefan', 'Stefanović', '7890123456789', '1988-08-25', 'Senta', '0642536729', 'stefan.stefanovic@email.com', 7, 6, 2, 7),
+(8, 'Tanja', 'Tadić', '8901234567890', '1994-12-10', 'Vranje', '0642536730', 'tanja.tadic@email.com', 5, 4, 1, 8),
+(9, 'Vladimir', 'Vasiljević', '9012345678901', '1987-04-17', 'Kraljevo', '0642536731', 'vladimir.vasiljevic@email.com', 8, 7, 3, 9),
+(10, 'Jelena', 'Jelić', '0123456789012', '1995-09-23', 'Čačak', '0642536732', 'jelena.jelic@email.com', 10, 9, 2, 10);
+
+
+INSERT INTO oblast_uze_usmerenje (oblast_oblast_id, uze_usmerenje_usmerenje_id) VALUES
+(1, 1),
+(1, 2),
+(2, 1),
+(2, 3),
+(3, 2),
+(3, 4),
+(4, 1),
+(5, 3),
+(6, 5),
+(7, 6);
+
+
+INSERT INTO psihoterapeut (psihoterapeut_id, ime, prezime, jmbg, datumRodjenja, prebivaliste, brojTelefona, mejl, datumSertifikacije, lozinka, oblast_psihoterapije_oblast_id, centar_za_obuku_centar_id) VALUES
+(1, 'Petar', 'Petrović', '1234567890123', '1980-03-15', 'Beograd', '0641234567', 'petar.petrovic@email.com', '2015-05-20', 'lozinka123', 1, 1),
+(2, 'Jelena', 'Jovanović', '2345678901234', '1985-06-25', 'Novi Sad', '0642345678', 'jelena.jovanovic@email.com', '2016-07-10', 'lozinka234', 2, 2),
+(3, 'Marko', 'Marković', '3456789012345', '1990-09-30', 'Niš', '0643456789', 'marko.markovic@email.com', '2018-02-17', 'lozinka345', 3, 3),
+(4, 'Ivana', 'Ivanić', '4567890123456', '1983-11-10', 'Kragujevac', '0644567890', 'ivana.ivanic@email.com', '2017-03-25', 'lozinka456', 4, 4),
+(5, 'Nikola', 'Nikolić', '5678901234567', '1992-05-05', 'Subotica', '0645678901', 'nikola.nikolic@email.com', '2019-08-11', 'lozinka567', 5, 5),
+(6, 'Ana', 'Anić', '6789012345678', '1993-01-20', 'Zrenjanin', '0646789012', 'ana.anic@email.com', '2020-02-15', 'lozinka678', 6, 6),
+(7, 'Stefan', 'Stefanović', '7890123456789', '1986-04-14', 'Senta', '0647890123', 'stefan.stefanovic@email.com', '2014-09-28', 'lozinka789', 7, 7),
+(8, 'Tanja', 'Tadić', '8901234567890', '1988-12-22', 'Vranje', '0648901234', 'tanja.tadic@email.com', '2015-10-30', 'lozinka890', 8, 8),
+(9, 'Vladimir', 'Vasiljević', '9012345678901', '1982-07-18', 'Kraljevo', '0649012345', 'vladimir.vasiljevic@email.com', '2016-12-05', 'lozinka901', 9, 9),
+(10, 'Jovana', 'Jelić', '0123456789012', '1995-10-10', 'Čačak', '0640123456', 'jelena.jelic@email.com', '2021-01-01', 'lozinka012', 10, 10);
+
+INSERT INTO sertifikacija (datumOd, datumDo, psihoterapeut_psihoterapeut_id, kandidat_kandidat_id, kandidat_centar_za_obuku_centar_id) VALUES
+('2020-01-01', '2020-12-31', 1, 1, 1),
+('2021-01-01', '2021-12-31', 2, 2, 2),
+('2021-06-01', '2021-12-31', 3, 3, 3),
+('2022-02-15', '2022-12-31', 4, 4, 4),
+('2020-05-10', '2020-11-30', 5, 5, 5),
+('2019-10-01', '2020-09-30', 6, 6, 6),
+('2021-03-15', '2021-11-15', 7, 7, 7),
+('2022-01-10', '2022-12-31', 8, 8, 8),
+('2020-08-01', '2020-12-31', 9, 9, 9),
+('2021-04-20', '2021-10-20', 10, 10, 10);
+
+INSERT INTO drziSeansu (drzi_id, psihoterapeut_psihoterapeut_id, kandidat_kandidat_id, kandidat_centar_za_obuku_centar_id) VALUES
+(1, 1, NULL, NULL),
+(2, NULL, 2, 2),
+(3, 3, NULL, NULL),
+(4, NULL, 4, 4),
+(5, 5, NULL, NULL),
+(6, NULL, 6, 6),
+(7, 7, NULL, NULL),
+(8, NULL, 8, 8),
+(9, 9, NULL, NULL),
+(10, NULL, 10, 10);
+
+
+INSERT INTO seansa (
+    seansa_id, dan, vreme, trajanje,
+    klijent_klijent_id, cena_seanse_cena_id, drziSeansu_drzi_id,
+    opis_seanse, objavljivanje_podataka, razlog_objavljivanja, kome_su_objavljeni,
+    vreme_objavljivanja
+) VALUES
+(1, '2023-05-10', '10:00:00', '01:00:00', 1, 1, 1, 'Individualna seansa o stresu', FALSE, NULL, NULL, NULL),
+(2, '2023-05-10', '11:30:00', '01:00:00', 2, 2, 2, 'Seansa o anksioznosti', FALSE, NULL, NULL, NULL),
+(3, '2023-05-10', '13:00:00', '01:30:00', 3, 3, 3, 'Rad sa adolescentom', TRUE, 'Priznanje krivičnog dela', 'Centar za socijalni rad', '2023-05-15'),
+(4, '2023-05-11', '09:00:00', '02:00:00', 4, 4, 4, 'Porodična terapija', FALSE, NULL, NULL, NULL),
+(5, '2023-05-11', '14:00:00', '01:30:00', 5, 5, 5, 'Seansa za kontrolu besa', TRUE, 'Priznanje krivičnog dela', 'Policiji', '2023-05-16'),
+(6, '2023-05-12', '16:00:00', '01:00:00', 6, 6, 6, 'Indikativna dijagnostika', FALSE, NULL, NULL, NULL),
+(7, '2023-05-12', '17:30:00', '01:30:00', 7, 7, 7, 'Seansa sa parom', TRUE, 'Priznanje krivičnog dela', 'Pravosudnim organima', '2023-05-17'),
+(8, '2023-05-13', '10:00:00', '02:00:00', 8, 8, 8, 'Grupna terapija', FALSE, NULL, NULL, NULL),
+(9, '2023-05-13', '12:30:00', '01:00:00', 9, 9, 9, 'Priprema za EMDR tretman', TRUE, 'Priznanje krivičnog dela', 'Centar za socijalni rad', '2023-05-18'),
+(10, '2023-05-13', '14:00:00', '01:30:00', 10, 10, 10, 'Psihodinamska analiza', FALSE, NULL, NULL, NULL);
+
+INSERT INTO psiholoski_test (psiholoski_test_id, oblast, naziv, cena, rezultat, seansa_seansa_id, seansa_klijent_klijent_id, seansa_drziSeansu_drzi_id) VALUES
+(1, 'Kognitivna', 'Test inteligencije', 5000, 120, 1, 1, 1),
+(2, 'Emocionalna', 'Test emocionalne stabilnosti', 4000, 85, 1, 1, 1),
+(3, 'Psihodinamska', 'Test ličnosti', 4500, 90, 2, 2, 2),
+(4, 'Neuropsihologija', 'Test pažnje', 3000, 75, 2, 2, 2),
+(5, 'Razvojna', 'Test zrelosti', 3500, 95, 3, 3, 3),
+(6, 'Kognitivna', 'Test memorije', 3800, 88, 3, 3, 3),
+(7, 'Emocionalna', 'Test anksioznosti', 4200, 60, 4, 4, 4),
+(8, 'Psihodinamska', 'Test samopouzdanja', 3900, 70, 4, 4, 4),
+(9, 'Neuropsihologija', 'Test brzine reakcije', 3100, 80, 5, 5, 5),
+(10, 'Razvojna', 'Test socijalnih veština', 3600, 92, 5, 5, 5);
+
+INSERT INTO seansa (seansa_id, dan, vreme, trajanje, klijent_klijent_id, cena_seanse_cena_id, drziSeansu_drzi_id, opis_seanse, objavljivanje_podataka, razlog_objavljivanja, kome_su_objavljeni) VALUES
+(11, '2026-05-10', '10:00:00', '01:00:00', 1, 1, 1, null, false, null, null);
+
+INSERT INTO placanje (
+    placanje_id, nacinPlacanja, rata, uplaceno, valuta_valuta_id,
+    seansa_seansa_id, seansa_klijent_klijent_id, seansa_drziSeansu_drzi_id
+) VALUES
+(1, 'kartica', 1, 5000, 1, 1, 1, 1),
+(2, 'gotovina', 1, 4500, 1, 2, 2, 2),
+(3, 'kartica', 1, 6000, 1, 3, 3, 3),
+(4, 'gotovina', 2, 3000, 1, 4, 4, 4),
+(5, 'kartica', 2, 4000, 1, 5, 5, 5),
+(6, 'gotovina', NULL, 7000, 1, 6, 6, 6),
+(7, 'kartica', NULL, 7500, 1, 7, 7, 7),
+(8, 'gotovina', 1, 8000, 1, 8, 8, 8),
+(9, 'kartica', 3, 2500, 1, 9, 9, 9),
+(10, 'gotovina', 2, 5500, 1, 10, 10, 10);
+
+
+SELECT
+    p.psihoterapeut_id,
+    p.ime,
+    p.prezime,
+    p.mejl,
+p.brojtelefona,
+    p.datumSertifikacije,
+    o.naziv
+FROM
+    psihoterapeut p
+JOIN
+oblast_psihoterapije o ON p.oblast_psihoterapije_oblast_id = o.oblast_id;
+
+SELECT
+    p.psihoterapeut_id,
+    p.ime,
+    p.prezime,
+    p.mejl,
+p.brojtelefona,
+    p.datumSertifikacije,
+    o.naziv
+FROM
+    psihoterapeut p
+JOIN
+oblast_psihoterapije o ON p.oblast_psihoterapije_oblast_id = o.oblast_id
+WHERE
+p.psihoterapeut_id = 5; /*ovde ubaciti id ulogovanog psihoterapeuta*/
+
+
+SELECT DISTINCT
+    k.klijent_id,
+    k.ime,
+    k.prezime,
+    k.mejl,
+    k.brojtelefona
+FROM
+    seansa s
+INNER JOIN
+    klijent k ON s.klijent_klijent_id = k.klijent_id
+INNER JOIN
+    drziSeansu d ON s.drziSeansu_drzi_id = d.drzi_id
+LEFT JOIN
+    sertifikacija cert ON d.kandidat_kandidat_id = cert.kandidat_kandidat_id
+WHERE
+    (d.psihoterapeut_psihoterapeut_id = 5 AND d.kandidat_kandidat_id IS NULL)
+    OR
+    (d.kandidat_kandidat_id = 5 AND d.psihoterapeut_psihoterapeut_id IS NULL)
+    OR
+    (cert.psihoterapeut_psihoterapeut_id = 5); /*ubaciti id ulogovanog psihoterapeuta*/
+
+
+
+SELECT
+    s.seansa_id,
+    s.dan,
+    s.vreme,
+    s.trajanje,
+s.opis_seanse,
+    s.objavljivanje_podataka,
+    s.razlog_objavljivanja,
+    s.kome_su_objavljeni,
+    k.ime AS klijent_ime,
+    k.prezime AS klijent_prezime
+FROM
+    seansa s
+INNER JOIN
+    klijent k ON s.klijent_klijent_id = k.klijent_id
+INNER JOIN
+    drziSeansu d ON s.drziSeansu_drzi_id = d.drzi_id
+LEFT JOIN
+    sertifikacija cert ON d.kandidat_kandidat_id = cert.kandidat_kandidat_id
+WHERE
+    ((d.psihoterapeut_psihoterapeut_id = 1 AND d.kandidat_kandidat_id IS NULL)
+    OR
+    (cert.psihoterapeut_psihoterapeut_id = 1)) /*ubaciti id logovanog psihoterapeuta/kandidata*/
+    AND s.dan < CURRENT_DATE
+ORDER BY
+    s.dan DESC;
+
+SELECT
+    s.seansa_id,
+    s.dan,
+    s.vreme,
+    s.trajanje,
+s.opis_seanse,
+    s.objavljivanje_podataka,
+    s.razlog_objavljivanja,
+    s.kome_su_objavljeni,
+    k.ime AS klijent_ime,
+    k.prezime AS klijent_prezime
+FROM
+    seansa s
+INNER JOIN
+    klijent k ON s.klijent_klijent_id = k.klijent_id
+INNER JOIN
+    drziSeansu d ON s.drziSeansu_drzi_id = d.drzi_id
+LEFT JOIN
+    sertifikacija cert ON d.kandidat_kandidat_id = cert.kandidat_kandidat_id
+WHERE
+     s.dan >= CURRENT_DATE
+ORDER BY
+    s.dan DESC;
+
+SELECT
+    s.seansa_id,
+    s.dan,
+    s.vreme,
+    s.trajanje,
+s.opis_seanse,
+    s.objavljivanje_podataka,
+    s.razlog_objavljivanja,
+    s.kome_su_objavljeni,
+    k.ime AS klijent_ime,
+    k.prezime AS klijent_prezime
+FROM
+    seansa s
+INNER JOIN
+    klijent k ON s.klijent_klijent_id = k.klijent_id
+INNER JOIN
+    drziSeansu d ON s.drziSeansu_drzi_id = d.drzi_id
+LEFT JOIN
+    sertifikacija cert ON d.kandidat_kandidat_id = cert.kandidat_kandidat_id
+WHERE
+s.seansa_id = 1;
+
+
+
+
+
+
+SELECT
+    s.seansa_id,
+    s.dan,
+    s.vreme,
+    s.trajanje,
+    s.opis_seanse,
+    s.objavljivanje_podataka,
+    s.razlog_objavljivanja,
+    s.kome_su_objavljeni,
+    k.ime AS klijent_ime,
+    k.prezime AS klijent_prezime
+FROM
+    seansa s
+INNER JOIN
+    klijent k ON s.klijent_klijent_id = k.klijent_id
+INNER JOIN
+    drziSeansu d ON s.drziSeansu_drzi_id = d.drzi_id
+LEFT JOIN
+    sertifikacija cert ON d.kandidat_kandidat_id = cert.kandidat_kandidat_id
+WHERE
+    ((d.psihoterapeut_psihoterapeut_id = 5 AND d.kandidat_kandidat_id IS NULL)
+    OR
+    (d.kandidat_kandidat_id = 5 AND d.psihoterapeut_psihoterapeut_id IS NULL)
+    OR
+    (cert.psihoterapeut_psihoterapeut_id = 5)) /*ubaciti id logovanog psihoterapeuta/kandidata*/
+    AND s.dan >= CURRENT_DATE
+ORDER BY
+    s.dan ASC;
+
+
+
+SELECT
+    s.seansa_id,
+    s.dan,
+    s.opis_seanse,
+    pt.psiholoski_test_id,
+    pt.naziv AS naziv_testa,
+    pt.rezultat
+FROM
+    seansa s
+INNER JOIN
+    psiholoski_test pt ON s.seansa_id = pt.seansa_seansa_id
+WHERE
+    s.seansa_id = 5; /*uneti id seanse koja je izabrana*/
+
+DELIMITER $$
+
+CREATE PROCEDURE objavi_podatke_o_seansi (
+    IN p_seansa_id INT,
+    IN p_kome_su_objavljeni VARCHAR(500),
+    IN p_razlog_objavljivanja varchar(500)
+)
+BEGIN
+    UPDATE seansa
+    SET
+        objavljivanje_podataka = TRUE,
+        vreme_objavljivanja = CURRENT_DATE,
+        razlog_objavljivanja = p_razlog_objavljivanja,
+        kome_su_objavljeni = p_kome_su_objavljeni
+    WHERE
+        seansa_id = p_seansa_id;
+END$$
+
+DELIMITER ;
+
+CALL objavi_podatke_o_seansi(2, 'Sud u Beogradu', 'Klijent priznao krivicno delo');
+
+select *
+from seansa
+where objavljivanje_podataka = true;
+
+SELECT
+    s.seansa_id,
+    s.klijent_klijent_id,
+    s.dan AS datum_seanse,
+    cs.cena AS cena_seanse,
+    COALESCE(SUM(p.uplaceno), 0) AS ukupno_placeno,
+    cs.cena - COALESCE(SUM(p.uplaceno), 0) AS dug
+FROM
+    seansa s
+INNER JOIN
+    cena_seanse cs ON s.cena_seanse_cena_id = cs.cena_id
+LEFT JOIN
+    placanje p ON s.seansa_id = p.seansa_seansa_id
+GROUP BY
+    s.seansa_id, s.klijent_klijent_id, s.dan, cs.cena
+ORDER BY
+    s.dan DESC;
+
+select * from klijent;
+select * from placanje;
+
+select * from kandidat;
+
+DELIMITER $$
+
+CREATE PROCEDURE insert_psihoterapeut(
+    IN p_id INT,
+    IN p_ime VARCHAR(100),
+    IN p_prezime VARCHAR(100),
+    IN p_jmbg VARCHAR(13),
+    IN p_datumRodjenja DATE,
+    IN p_prebivaliste VARCHAR(255),
+    IN p_brojTelefona VARCHAR(20),
+    IN p_mejl VARCHAR(255),
+    IN p_datumSertifikacije DATE,
+    IN p_lozinka VARCHAR(255),
+    IN p_oblastId INT,
+    IN p_centarId INT
+)
+BEGIN
+    INSERT INTO psihoterapeut
+    (psihoterapeut_id, ime, prezime, jmbg, datumRodjenja, prebivaliste, brojTelefona, mejl, datumSertifikacije, lozinka, oblast_psihoterapije_oblast_id, centar_za_obuku_centar_id)
+    VALUES (p_id, p_ime, p_prezime, p_jmbg, p_datumRodjenja, p_prebivaliste, p_brojTelefona, p_mejl, p_datumSertifikacije, p_lozinka, p_oblastId, p_centarId);
+END$$
+
+DELIMITER ;
+
+select * from psiholoski_test;
+
+select
+psiholoski_test_id,
+oblast,
+    naziv,
+cena,
+    rezultat
+from
+psiholoski_test
+where
+seansa_seansa_id = 1;
+
+SELECT
+    k.klijent_id,
+    k.ime,
+    k.prezime,
+    k.mejl,
+    k.brojTelefona,
+    k.isaoRanije,
+    k.opisProblema
+FROM
+    seansa s
+INNER JOIN
+klijent k on s.klijent_klijent_id = k.klijent_id
+INNER JOIN
+    drziSeansu d ON s.drziSeansu_drzi_id = d.drzi_id
+LEFT JOIN
+    sertifikacija cert ON d.kandidat_kandidat_id = cert.kandidat_kandidat_id
+WHERE
+(d.psihoterapeut_psihoterapeut_id = 1 or cert.psihoterapeut_psihoterapeut_id = 1) and s.dan > current_date and k.klijent_id NOT IN
+    (
+    select s.klijent_klijent_id
+    from seansa sp
+    inner join drziSeansu ds on sp.drziSeansu_drzi_id = ds.drzi_id
+    left join sertifikacija sert on ds.kandidat_kandidat_id = sert.kandidat_kandidat_id
+    where
+(ds.psihoterapeut_psihoterapeut_id = 1 or sert.psihoterapeut_psihoterapeut_id = 1) and sp.dan <= current_date
+    );
